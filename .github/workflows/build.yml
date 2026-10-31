@@ -10,38 +10,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: authored and grown (lualatex)
-        uses: xu-cheng/latex-action@v3
+      - uses: typst-community/setup-typst@v4
         with:
-          root_file: |
-            florilegium.tex
-            florilegium-grow.tex
-            showcase.tex
-          latexmk_use_lualatex: true
+          typst-version: ^0.14
+      - name: the example documents
+        run: make
       - uses: actions/upload-artifact@v4
         with:
           name: florilegium-pdfs
-          path: |
-            florilegium.pdf
-            florilegium-grow.pdf
-            showcase.pdf
+          path: examples/*.pdf
 
-  gallery:
+  sheets:
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v4
-      - name: render six seeds
-        uses: xu-cheng/latex-action@v3
+      - uses: typst-community/setup-typst@v4
         with:
-          root_file: gallery.tex
-          latexmk_use_lualatex: true
-          extra_system_packages: python3 py3-pillow poppler-utils
-          post_compile: >-
-            python3 tools/gallery.py --seeds 1 2 3 4 5 6 --jobs 2 &&
-            python3 tools/gallery.py --seed 6 --inks 2456C4 5B2A1F 2F6B4F 8E1B3A 4B3B8F 1D6E7A --jobs 2 &&
-            python3 tools/gallery.py --seed 6 --ages 0 0.33 0.67 1 --jobs 2
+          typst-version: ^0.14
+      - run: pip install pillow
+      - name: seeds, inks and seasons
+        run: make sheets
       - uses: actions/upload-artifact@v4
         with:
-          name: gallery
-          path: gallery/
+          name: sheets
+          path: images/

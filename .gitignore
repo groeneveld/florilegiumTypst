@@ -1,11 +1,7 @@
 build/
 scratch/
-*.aux
-*.log
-*.out
-*.synctex.gz
-*.fdb_latexmk
-*.fls
-# rendered previews live in gallery/; anything else is scratch
+.DS_Store
+# rendered previews live in images/; anything else is scratch
 *.png
-!gallery/*.png
+# the Rust plugin's build (its product, florilegium.wasm, is kept)
+plugin/target/

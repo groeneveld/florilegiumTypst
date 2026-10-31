@@ -1,260 +1,147 @@
 # florilegium
 
-## Origin
+Procedurally drawn floral margins for Typst, in Delft blue or in a sumi-e plum style.
+Every page grows its own garden in the left margin, around your headings and into the space
+your text leaves free. Everything is drawn by a WebAssembly plugin; there are no images.
 
-The [Reddit post](https://www.reddit.com/r/LaTeX/comments/1xixznw/how_do_you_make_these_flowers_in_latex/)
-asked how to make flowers like these in LaTeX. I don't know how the original was made, and
-this project doesn't try to reproduce it. It is one possible way, and the way I did it:
-hand-authored primitives with randomized parameters, painted in Lua, placed by a procedural
-layout whose "fill the unused space" part borrows a 1998 idea from the ornament literature.
-It gets a similar look.
+This is a Typst port of Kevin Raymond's LuaLaTeX package
+[florilegium](https://github.com/kevinraymond/florilegium). The drawing code is his,
+translated from Lua to Rust.
 
-## What it is
+<p>
+  <img src="images/seeds.webp" alt="six seeds in the Delft style" width="49%">
+  <img src="images/sumi-e-seeds.webp" alt="six seeds in the sumi-e style" width="49%">
+</p>
 
-Procedurally generated Delft-blue floral page margins for LaTeX. No images, no imported
-paths, no external assets: every petal, leaf and stem is a parametric curve computed in Lua
-while the page is being written, painted like a watercolor, and written straight into the
-PDF. Every page gets its own garden.
+## Install
 
-![six seeds](gallery/seeds.gif)
-
-*Six seeds of the grown composition. Same code, different seed — and the garden fills
-whatever space the text leaves free.*
-
-Two documents share one package, and a third shows what else it does:
-
-| | `florilegium.tex` | `florilegium-grow.tex` |
-|---|---|---|
-| composition | **authored**: stems, leaves and flowers placed by hand, every parameter sampled | **grown**: a plant grown to fit the page by a greedy space-filling loop |
-| adapts to | nothing (tuned for A4, 68 mm margin) | the page layout, and the free space below the text on the last page |
-| preview | <img src="gallery/preview-authored.png" alt="authored" width="300"> | <img src="gallery/preview-grown.png" alt="grown" width="300"> |
-
-Both PDFs are self-describing: the body text is the write-up of how the margin is drawn.
-
-![last page of the grown document](gallery/preview-grown-lastpage.png)
-
-*Last page of the grown document: the text ends early, so branches arch into the space below.*
-
-![detail](gallery/detail.png)
-
-*300 dpi crop. Mottled washes with white streaks lifted out, lobed leaves with white veins,
-forget-me-not cymes, a pale ghost flower behind the stems.*
-
-## Watch it grow
-
-| as it grows | with the free space it fills |
-|---|---|
-| <img src="gallery/growth.gif" alt="seed 6 growing" width="400"> | <img src="gallery/growth-explain.gif" alt="seed 6 growing, with the free discs marked" width="400"> |
-
-*Seed 6, from an empty margin to the finished page. The stems rise first, leaves open as
-the tips pass their nodes, and each stem ends in a flower. Then the greedy loop takes over:
-on the right, each dashed circle is the largest free disc it found, just before a branch
-grows to it. Big holes come first and slowly, small ones last and fast. The butterflies and
-bees fly in, the bird glides onto its twig, and the snail crawls up its stem until the last
-frame, which is exactly the page this seed always gives.*
-
-The growth is recorded once, while the page is laid out: each stem is also drawn as
-prefixes of increasing length and each motif at a few smaller scales, replaying the same
-random draws. A frame then writes the pieces whose time has come, in their original
-painting order. `make grow-6` renders one seed this way (`build/grow-6.gif` and `.mp4`, about
-45 seconds); add `EXPLAIN=1` for the dashed circles.
-
-## The margin reads the text
-
-![the three pages of showcase.tex](gallery/preview-showcase.png)
-
-*`showcase.tex`, "A year in the margin": spring on the first page, summer, autumn on the
-last. Each section describes the feature it shows.*
-
-The grown margin can respond to the document around it:
-
-- **Initials.** `\florilegiuminitial[5]{E}` sets the first letter of a paragraph in a tile
-  five lines tall. The outline of the letter is read from an OpenType font (Latin Modern
-  Bold by default) and painted like a petal; a vine passes over and under its strokes in
-  turn, with leaves where they fit and flowers in the gaps, often in the letter's counters.
-  The letter is also typeset invisibly, so the paragraph still copies as "Every".
-- **Flowers at the headings.** With the option `sections`, every numbered section and
-  subsection gets a flower in the margin beside its heading, painted in the copper of the
-  accents, the way headings were once picked out in red.
-- **A flower where the text asks.** `\florilegiumbloom` puts a flower beside the line it
-  stands in; `\florilegiumbloom[lily]` asks for any motif of the garden. The marks are found
-  in the page box when the page is shipped out, so this works in one run.
-- **Seasons.** With the option `aging`, the garden ages from spring on the first page
-  (mostly in bud, small pale leaves) to autumn on the last (seed heads, falling petals, a
-  few copper leaves). It needs two runs, for the page count; `\florilegiumage{0.8}` sets an
-  age by hand instead.
-
-![four initials](gallery/initials.png)
-
-![one seed through the seasons](gallery/seasons.png)
-
-*One seed in spring, early summer, late summer and autumn. The seasons change what grows,
-not where.*
-
-## Visitors
-
-![detail with a bird and a snail](gallery/detail-visitors.png)
-
-Most pages have visitors: a butterfly or two and bees in the open spaces, a snail crawling
-up one of the main stems, and on about one page in five a bird perched on a twig of its own.
-They come from a random stream of their own, so a page without them is exactly the page it
-would have been; the option `novisitors` leaves them out.
-
-## Any ink
-
-![one seed in six inks](gallery/inks.png)
-
-*The whole palette comes from one color, `ink`: Delft blue, sepia, green, crimson, violet,
-teal. The ramp from the darkest stroke to the palest wash is computed from that hue in
-OKLCH, so the light end never turns gray.*
-
-## In PostScript
-
-![the two pages of postscript/florilegium.ps, seed 7](gallery/preview-postscript.png)
-
-*`postscript/florilegium.ps`: the grown margin in pure PostScript, one self-contained file.
-Ghostscript, or a printer, computes every petal while it interprets the page, and the
-two pages of text explain how.*
-
-The drawing core, every primitive and the growth loop are ported from `ink.lua`, `flora.lua`
-and `grow.lua`, procedure for procedure. It needs no TeX and no other file:
+The package isn't on Typst Universe yet. Copy it into your local package directory:
 
 ```sh
-gs -dALLOWPSTRANSPARENCY -sDEVICE=pdfwrite -dSeed=7 -o garden.pdf postscript/florilegium.ps
-make postscript             # the same -> build/postscript-7.pdf; SEED=12 for another garden
+# macOS; on Linux use ~/.local/share/typst/packages/local/florilegium/0.1.0
+dir=~/Library/Application\ Support/typst/packages/local/florilegium/0.1.0
+mkdir -p "$dir"
+cp -R florilegium.typ florilegium.wasm fonts typst.toml "$dir"
 ```
 
-`-dSeed=N` picks the garden; without it the clock picks one, so every print is new.
-`-dAge=0` to `1` sets the season, and `-dNoVisitors` leaves out the butterflies, bees, snail
-and bird. Two pages take about 2.5 seconds. Much of the Lua maps directly: PostScript's own
-transformation matrix places each primitive (translate, rotate, scale), paths and Bézier
-curves are native, and procedures built at run time stand in for Lua's closures (a petal's
-half-width is a procedure handed to the outline builder). Four things don't map:
+Then import it with `#import "@local/florilegium:0.1.0": *`.
 
-- **Layers.** The garden grows in one order but is painted back to front, so every fill and
-  stroke is captured with `pathforall` into a list per layer, and the lists are played back
-  at the end.
-- **Transparency.** PostScript has none. Ghostscript provides it with `-dALLOWPSTRANSPARENCY`.
-  Without that flag, or on a printer, each translucent fill is mixed with the color it is
-  likely to land on and painted opaque. The result is flatter, but it's the same garden.
-- **Randomness.** The generator is Park-Miller in 32-bit integer arithmetic, and PostScript
-  reals are single precision, so seed 7 here is a different garden from seed 7 in LaTeX.
-- **Text.** The file typesets its own two pages in Times. It knows where its headings are and
-  where its text ends, so the copper flowers at the headings and the garden under the last
-  line work as they do in LaTeX. It has no initials, animation or authored composition.
+On typst.app, upload `florilegium.typ`, `florilegium.wasm` and `fonts/` next to your
+document and use `#import "florilegium.typ": *`.
 
-<img src="gallery/printed.jpg" alt="two prints of florilegium.ps, two different gardens" width="500">
+Requires Typst 0.14 or later.
 
-*The file sent twice to an Epson inkjet with `lp postscript/florilegium.ps`, with no seed
-given. The computer's print system runs the program again for each job, so each print takes
-its seed from the clock and grows a different garden. A printer gets the opaque version, as
-it has no transparency.*
+## Quick start
 
-## Build
+```typ
+#import "@local/florilegium:0.1.0": *
+#show: florilegium.with(sections: true, aging: true)
 
-LuaLaTeX, one pass, about a second a page (two passes for `showcase.tex`, whose seasons need
-the page count).
+= Introduction
 
-```sh
-make                        # the three PDFs
-make seed-7                 # one page from seed 7 -> build/seed-7.pdf
-make gallery                # gallery/seeds.png + seeds.gif, inks.png, seasons.png (python3, Pillow, pdftoppm)
-make grow-6                 # growth animation of seed 6 -> build/grow-6.gif + .mp4 (ffmpeg)
-make grow-6 EXPLAIN=1       # the same with the free discs marked -> build/grow-6-explain.*
-```
+#initial("T", lines: 4)[his paragraph opens with a decorated initial.]
 
-No TeX installed? Build the image once and run everything in it:
+A line that gets a flower beside it in the margin. #bloom()
 
-```sh
-docker build -t florilegium-tex tools
-make RUN=tools/in-docker
-```
-
-Or paste `florilegium.sty`, the six `.lua` files and one of the `.tex` files into an
-[Overleaf](https://www.overleaf.com) project and set the compiler to LuaLaTeX.
-
-Use it in your own document:
-
-```latex
-\usepackage[grown]{florilegium}      % or plain \usepackage{florilegium} for the authored one
-% options for the grown one: sections (flowers at the headings), aging (two runs),
-% novisitors (no butterflies, bees, snails or birds)
-\definecolor{ink}{HTML}{5B2A1F}      % optional: the hue of the whole palette (this is sepia)
-\definecolor{accent}{HTML}{B4662F}   % optional: the copper of the hairlines
 ...
-\florilegiuminitial[4]{T}his paragraph starts with a decorated T.
-... a flower in the margin beside this line\florilegiumbloom ...
-\florilegiumage{0.8}                 % grown only: autumn from here on
-\florilegiumtextend                  % grown only: at the very end of the text
+
+#textend()   // last thing in the document: the garden fills the space below the text
 ```
 
-A fixed seed instead of the page number: `lualatex "\def\florilegiumseed{7}\input{florilegium-grow.tex}"`.
+## Options
 
-Any primitive can be drawn on its own inside a TikZ picture, under the current scope's
-shift, rotation and scale:
+`florilegium.with(..)` sets up the page and draws the margin behind it.
 
-```latex
-\begin{tikzpicture}
-  \begin{scope}[shift={(2,2)},rotate=20]\florilegiumdraw{flower}{1.3}\end{scope}
-  \begin{scope}[shift={(5,0)}]\florilegiumdraw{leaf}{3.0, {depth=0.6}}\end{scope}
-  \begin{scope}[shift={(8,1)}]\florilegiumdraw{ghost}{"lily", {s=1.4}}\end{scope}
-  \begin{scope}[shift={(11,1)}]\florilegiumdraw{butterfly}{1.5}\end{scope}
-\end{tikzpicture}
+| option | default | |
+|---|---|---|
+| `style` | `"delft"` | `"delft"` (cobalt on white) or `"sumi-e"` (black plum branch, red blossoms, warm paper) |
+| `seed` | `none` | `none` gives each page its own garden from its page number; an integer fixes it |
+| `sections` | `false` | a flower beside every level 1 and 2 heading |
+| `aging` | `false` | the garden runs from spring on the first page to autumn on the last |
+| `visitors` | `true` | butterflies, bees, snails and birds |
+| `ink` | `auto` | the main color; the whole palette is derived from it (try `rgb("#5B2A1F")` for sepia) |
+| `accent` | `auto` | the color of the hairlines and heading flowers |
+| `blossom` | `auto` | the color of the flowers; `none` uses `ink` |
+| `fill` | `auto` | the paper color |
+| `composition` | `auto` | `"grown"`, `"plum"`, or `"authored"` (a fixed, hand-placed design; A4 with the default margins only) |
+| `margin` | `true` | `false` turns the margin off, leaving `initial`, `draw` and `headpiece` |
+| `paper` | `"a4"` | |
+| `page-margin` | `(left: 68mm, right: 22mm, top: 32mm, bottom: 30mm)` | the garden lives in the left margin, so keep it wide |
+| `headsep`, `footskip` | `8mm`, `30pt` | distance from the text to the header and footer |
+| `header`, `footer` | `none`, page number | |
+
+Set the page through these options, not with your own `set page`: the garden reads the page
+geometry from them and won't notice changes made elsewhere.
+
+## In the text
+
+| | |
+|---|---|
+| `#bloom()` | a flower in the margin beside this line |
+| `#bloom("lily")` | a particular motif: `flower`, `lily`, `blossoms`, `bells`, `umbel`, `cyme`, `sprig`, `bud`, `budding`, `seedhead`, `leaf`, `tendril`, `butterfly`, `bee` |
+| `#age(0.8)` | the season from here on: 0 spring, 0.5 summer, 1 autumn (use instead of `aging`) |
+| `#textend()` | put at the end of the text so the last page's garden can grow underneath it |
+| `#initial("E", lines: 5)[very ...]` | a decorated initial, `lines` lines tall, with the paragraph set beside it. The letter still copies as part of the word. `font:` takes the bytes of another OpenType font. |
+| `#draw("flower", size: 1.3, angle: 20deg)` | one motif on its own, as an inline image. See `examples/specimen.typ` for all of them. |
+| `#headpiece(15cm, 3cm, seed: 3, flip: true)` | a sumi-e plum spray filling a box, e.g. above a chapter title. Works without the show rule. |
+
+![initials](images/initials.webp)
+
+## Styles and colors
+
+![one seed in six inks](images/inks.webp)
+
+`ink` sets the whole palette, from the darkest line to the palest wash.
+
+![examples/sumi-e.typ](images/preview-sumi-e.webp)
+
+```typ
+#show: florilegium.with(style: "sumi-e", sections: true, aging: true)
 ```
 
-## How it works
+The sumi-e style supports the same options and marks: twigs reach to the headings and to
+`#bloom()`, and the seasons and the last page work the same way.
 
-**Drawing** (`ink.lua`). All geometry is computed in Lua and written as PDF path operators
-into one literal node per page; TeX does no arithmetic. Primitives are drawn in a local
-frame under an affine transform, which is read from TikZ when a primitive is called inside
-a scope. Colors come from a tone ramp derived from the one document color `ink`: navy to
-mist at the hue of `ink`, interpolated in OKLCH so the light end stays blue instead of
-turning gray. Tapered strokes are two offset Béziers, not sampled ribbons.
+![one seed through the seasons](images/seasons.webp)
 
-**Primitives** (`flora.lua`). Painted in the order a watercolorist would: a flat wash,
-darker blotches multiplied over it, pigment pooling at the edges, streaks lifted out in
-white, a few fine veins, and almost no outlines. Broad petals and flowers, star lilies seen
-at a tilt, blossoms and florets, buds and bellflowers; lobed and entire leaves; forget-me-not
-cymes that curl like a scorpion's tail, branching sprigs, umbels, tendrils, seed heads;
-butterflies, bees, snails and a bird; copper sparkles, rosettes and the ivy-leaf fleuron
-whose stem becomes the head rule. Any of them can be painted as a pale ghost.
+*`aging`: spring, early summer, late summer, autumn.*
 
-**Authored composition** (`authored.lua`). A plant grows from a root in the bottom-left
-corner: three stems through hand-picked control points, a fourth along the bottom of the
-page as the footer, leaves at chosen fractions of the stems, and every other motif on a
-branch that leaves its stem tangentially and arrives along the motif's axis — so every
-flower can be traced back to the root.
+## Good to know
 
-**Grown composition** (`grow.lua`), in the spirit of Wong, Zongker & Salesin,
+- **Speed.** Each page takes about a second to compile. A page adds about 0.6 MB to the PDF.
+- **Reproducible.** The same document always gives the same gardens. Change `seed` to get
+  different ones.
+- **One compilation.** The margin finds headings, `bloom` marks and the text end through
+  `query`/`locate`, so Typst may need a few layout passes, but no second run.
+- **Left margin only.** There is no mirrored variant for two-sided documents yet.
+
+## Examples
+
+`examples/` has complete documents; compile them from the repository root with
+`typst compile --root . examples/showcase.typ`.
+
+- `showcase.typ`: sections, `bloom`, initials and seasons, explained page by page
+- `grown.typ` and `authored.typ`: the two Delft compositions
+- `sumi-e.typ`: the plum style with a headpiece
+- `specimen.typ`: every motif from `#draw`
+- `variant.typ`: one page for any seed and color, e.g.
+  `typst compile --root . --input seed=6 --input ink=5B2A1F examples/variant.typ out.pdf`
+
+## Development
+
+`florilegium.wasm` is committed, so you only need Rust to change the drawing. The source is
+in `plugin/`; `make plugin` rebuilds it (needs the `wasm32-unknown-unknown` target), `make`
+builds the examples, and `make baseline` / `make check` confirm a refactor leaves the output
+unchanged. [CLAUDE.md](CLAUDE.md) maps the code.
+
+The method follows Wong, Zongker & Salesin,
 [*Computer-Generated Floral Ornament*](https://dl.acm.org/doi/10.1145/280814.280948)
-(SIGGRAPH 1998). The stems sway up the column as smooth noise of their height; leaves are
-hung at their nodes where there is room. Then, repeatedly: take the largest free disc within
-reach of a stem, choose a motif that fits it, and grow a branch to it from the nearest stem
-point; the branch becomes a stem in turn. Big holes are taken first, so flowers and lilies
-land early, sprays and leaves fill the middle, and the loop ends by tucking leaflets, buds
-and florets onto the stems. The end of the text is measured with `\pagetotal` in the same
-pass, so a short last page grows branches into the space below it with one compilation.
-
-**Reading the page** (`florilegium.lua`). A heading or `\florilegiumbloom` leaves an
-invisible marker node in the text. When the page is shipped out, its box is walked node by
-node, adding up heights, depths and the glue as it was set, to find each marker's height on
-the page; the garden then gives those lines their flowers before any leaf is hung. An age
-reweights the motifs: buds and sprays of buds in spring, seed heads in autumn, when some
-leaves are painted with a ramp built from the accent instead of the ink.
-
-**Initials** (`initial.lua`). The letter's outline comes from luaotfload's OpenType reader as
-Bézier segments. Flattened into polygons, it gives an even-odd inside test, and a grid of
-distances to the letter and the frame finds the largest gaps for the flowers. The vine is a
-Catmull-Rom curve across the tile; where it crosses the letter it goes over and under in
-turn, and the strands that go over are drawn again, clipped to the letter, with a thin halo
-of paper.
-
-**Procedural ≠ random.** The seed is derived from the page number, so page *n* always
-gets garden *n*. Reproducibility is what makes the document stable enough to typeset.
-
-See [CLAUDE.md](CLAUDE.md) for a handoff-style map of the code, the tunables, and ideas not
-yet done.
+(SIGGRAPH 1998): grow stems, then repeatedly fill the largest free space within reach with
+a motif that fits. Kevin Raymond wrote the original in Lua for LuaLaTeX, in answer to
+[a Reddit question](https://www.reddit.com/r/LaTeX/comments/1xixznw/how_do_you_make_these_flowers_in_latex/);
+that version is still in this repository's git history and at
+[kevinraymond/florilegium](https://github.com/kevinraymond/florilegium).
 
 ## License
 
-MIT.
+MIT, © 2026 Kevin Raymond and Mark Groeneveld. The bundled Latin Modern Roman Bold font is under the GUST Font License.

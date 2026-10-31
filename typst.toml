@@ -1,0 +1,13 @@
+[package]
+name = "florilegium"
+version = "0.1.0"
+entrypoint = "florilegium.typ"
+authors = ["Kevin Raymond", "Mark Groeneveld"]
+license = "MIT"
+description = "Procedurally generated Delft-blue floral page margins, drawn by a WASM plugin"
+repository = "https://github.com/groeneveld/florilegiumTypst"
+keywords = ["ornament", "margin", "floral", "procedural", "generative"]
+categories = ["visualization", "layout"]
+compiler = "0.14.0"
+# the package is florilegium.typ, florilegium.wasm and fonts/; the rest is its workshop
+exclude = ["plugin", "readme-tools", "images", "build", "scratch", "examples/*.pdf", "Makefile", "CLAUDE.md"]
